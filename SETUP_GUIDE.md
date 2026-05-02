@@ -19,6 +19,7 @@ For Codex plugin installs, use the repo metadata:
 - `.codex-plugin/plugin.json` describes the plugin and points Codex at the bundled skills.
 - `.mcp.json` registers the persistent OrbStack-backed `tradingview` MCP server over HTTP.
 - `.mcp.local.json` registers the direct local Node server for development.
+- `.agents/plugins/marketplace.json` is a copyable example local Codex marketplace entry for enabling the slash-picker/plugin surface.
 - `skills/` contains the Codex skills that explain common TradingView workflows.
 
 For a manual MCP client setup, merge this server entry into the client's MCP configuration:
@@ -54,6 +55,35 @@ url = "http://127.0.0.1:3000/mcp"
 ```
 
 After adding it, fully restart Codex desktop.
+
+### Codex Plugin / Slash-Picker Option
+
+If the user also wants `TradingView` to appear in Codex's slash picker, they need the plugin marketplace layer in addition to the MCP server.
+
+This repo includes an example marketplace file:
+
+```bash
+.agents/plugins/marketplace.json
+```
+
+That marketplace entry points back to this repo as a local plugin. A typical home-local setup is:
+
+1. Create a local Codex marketplace directory
+2. Symlink this repo into `plugins/tradingview-mcp`
+3. Copy or adapt `.agents/plugins/marketplace.json`
+4. Add marketplace/plugin entries to `~/.codex/config.toml`
+
+Example config:
+
+```toml
+[marketplaces.tradingview-global]
+last_updated = "2026-05-02T18:05:00Z"
+source_type = "local"
+source = "/Users/<you>/.codex/local-marketplaces/tradingview-global"
+
+[plugins."tradingview-mcp@tradingview-global"]
+enabled = true
+```
 
 ## Step 3: Launch TradingView Desktop
 
@@ -112,6 +142,7 @@ Most MCP clients load servers at startup or plugin reload time. After adding the
 2. Confirm the `tradingview` MCP server appears in the available tools
 3. The tradingview MCP server should connect automatically
 4. In Codex global settings, the server should appear under MCP servers
+5. If the plugin marketplace is enabled, `TradingView` should also appear in the slash picker
 
 ## Step 6: Verify Connection
 
@@ -186,6 +217,7 @@ The compose defaults use `TRADINGVIEW_CDP_HOST=0.250.250.254` and `TRADINGVIEW_C
 | `npm run tvStatus` fails with connection refused on port 3000 | Start the persistent service with `npm run tvUp` |
 | MCP server not showing in Codex | Check `.mcp.json` syntax, restart or reload Codex/plugin configuration |
 | MCP server not showing in Codex global settings | Check `~/.codex/config.toml` contains `[mcp_servers.tradingview]` and fully restart Codex |
+| `TradingView` not showing in the slash picker | Make sure a local plugin marketplace is enabled and `plugins.\"tradingview-mcp@...\"` is turned on in `~/.codex/config.toml` |
 | `tv` command not found | Run `npm link` from the project directory |
 | Tools return stale data | TradingView may still be loading — wait a few seconds |
 | Pine Editor tools fail | Open the Pine Editor panel first (`ui_open_panel pine-editor open`) |

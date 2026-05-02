@@ -75,7 +75,7 @@ There are two good ways to use this repo with Codex:
 1. **Repo-local MCP config** — open this repo in Codex and let Codex use the bundled `.mcp.json`
 2. **Global Codex MCP config** — register the server once in `~/.codex/config.toml` so it is available from any thread
 
-For most people using this on their own machine, the global Codex MCP setup is the cleanest option.
+If you also want a discoverable `TradingView` entry in the Codex slash picker, keep the plugin metadata enabled too. MCP server registration and plugin/skill discovery are separate Codex surfaces.
 
 ## Quick Start: Codex + OrbStack
 
@@ -199,6 +199,40 @@ You can also start from the slash picker in Codex and choose `TradingView`, then
 What is SPY doing right now?
 ```
 
+### 7. Optional: Enable the TradingView Slash-Picker Entry
+
+If you want `TradingView` to appear in the Codex slash picker or skill picker, you need the plugin marketplace metadata in addition to the global MCP server entry.
+
+This repo includes an example marketplace file at:
+
+```bash
+.agents/plugins/marketplace.json
+```
+
+That file points back to this repo as a local Codex plugin. A typical home-local setup looks like this:
+
+1. Create a local marketplace folder
+2. Symlink this repo into `plugins/tradingview-mcp`
+3. Copy or adapt `.agents/plugins/marketplace.json`
+4. Enable that marketplace/plugin in `~/.codex/config.toml`
+
+Example `~/.codex/config.toml` blocks:
+
+```toml
+[marketplaces.tradingview-global]
+last_updated = "2026-05-02T18:05:00Z"
+source_type = "local"
+source = "/Users/<you>/.codex/local-marketplaces/tradingview-global"
+
+[plugins."tradingview-mcp@tradingview-global"]
+enabled = true
+```
+
+With both of these in place:
+
+- `[mcp_servers.tradingview]` powers the MCP server in Codex settings
+- the marketplace/plugin entry powers the `TradingView` slash-picker entry
+
 ### Useful Commands
 
 ```bash
@@ -270,6 +304,8 @@ For Codex global config specifically, add this to `~/.codex/config.toml`:
 [mcp_servers.tradingview]
 url = "http://127.0.0.1:3000/mcp"
 ```
+
+If you also want the slash-picker entry, use the example marketplace at `.agents/plugins/marketplace.json` as the starting point for a local Codex marketplace.
 
 Start the OrbStack service from the repo root first:
 

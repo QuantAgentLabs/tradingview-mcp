@@ -1,0 +1,20 @@
+{
+  "name": "tradingview-local",
+  "interface": {
+    "displayName": "TradingView Local"
+  },
+  "plugins": [
+    {
+      "name": "tradingview-mcp",
+      "source": {
+        "source": "local",
+        "path": "../.."
+      },
+      "policy": {
+        "installation": "INSTALLED_BY_DEFAULT",
+        "authentication": "ON_USE"
+      },
+      "category": "Finance"
+    }
+  ]
+}
