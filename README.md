@@ -178,14 +178,16 @@ npm run orb:tv -- pine analyze --file scripts/current.pine
 The compose file defaults to:
 
 ```bash
-TRADINGVIEW_CDP_HOST=host.docker.internal
+TRADINGVIEW_CDP_HOST=0.250.250.254
 TRADINGVIEW_CDP_PORT=9222
 ```
+
+OrbStack resolves `host.docker.internal` too, but TradingView Desktop's Electron CDP endpoint rejects that hostname in the HTTP `Host` header. The OrbStack host IP avoids that rejection.
 
 Override them if needed:
 
 ```bash
-TRADINGVIEW_CDP_HOST=host.docker.internal TRADINGVIEW_CDP_PORT=9223 docker compose run --rm tv status
+TRADINGVIEW_CDP_HOST=0.250.250.254 TRADINGVIEW_CDP_PORT=9223 docker compose run --rm tv status
 ```
 
 ### 4. Run the MCP server through Compose

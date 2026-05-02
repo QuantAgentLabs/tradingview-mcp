@@ -127,7 +127,7 @@ npm run orb:mcp
 
 Use `npm run orb:setup` to launch TradingView on macOS and build the container in one command.
 
-The compose defaults use `TRADINGVIEW_CDP_HOST=host.docker.internal` and `TRADINGVIEW_CDP_PORT=9222`, which is the normal OrbStack path back to a service running on the Mac host.
+The compose defaults use `TRADINGVIEW_CDP_HOST=0.250.250.254` and `TRADINGVIEW_CDP_PORT=9222`. `0.250.250.254` is OrbStack's host IP; it avoids TradingView Desktop's Electron CDP rejection of non-localhost hostnames such as `host.docker.internal`.
 
 ## Troubleshooting
 
@@ -135,7 +135,7 @@ The compose defaults use `TRADINGVIEW_CDP_HOST=host.docker.internal` and `TRADIN
 |---------|----------|
 | `cdp_connected: false` | Launch TradingView with `--remote-debugging-port=9222` |
 | `ECONNREFUSED` | TradingView isn't running or port 9222 is blocked |
-| Compose cannot reach TradingView | Make sure TradingView was launched on the Mac host and `TRADINGVIEW_CDP_HOST=host.docker.internal` |
+| Compose cannot reach TradingView | Make sure TradingView was launched on the Mac host and `TRADINGVIEW_CDP_HOST=0.250.250.254` |
 | MCP server not showing in Codex | Check `.mcp.json` syntax, restart or reload Codex/plugin configuration |
 | `tv` command not found | Run `npm link` from the project directory |
 | Tools return stale data | TradingView may still be loading — wait a few seconds |

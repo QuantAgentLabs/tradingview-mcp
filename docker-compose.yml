@@ -4,7 +4,7 @@ services:
       context: .
     image: tradingview-mcp:local
     environment:
-      TRADINGVIEW_CDP_HOST: ${TRADINGVIEW_CDP_HOST:-host.docker.internal}
+      TRADINGVIEW_CDP_HOST: ${TRADINGVIEW_CDP_HOST:-0.250.250.254}
       TRADINGVIEW_CDP_PORT: ${TRADINGVIEW_CDP_PORT:-9222}
     stdin_open: true
     tty: false
@@ -15,7 +15,7 @@ services:
     build:
       context: .
     environment:
-      TRADINGVIEW_CDP_HOST: ${TRADINGVIEW_CDP_HOST:-host.docker.internal}
+      TRADINGVIEW_CDP_HOST: ${TRADINGVIEW_CDP_HOST:-0.250.250.254}
       TRADINGVIEW_CDP_PORT: ${TRADINGVIEW_CDP_PORT:-9222}
     profiles:
       - cli
