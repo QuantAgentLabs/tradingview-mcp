@@ -24,7 +24,7 @@ const SERVER_INFO = {
   description: 'Codex-ready TradingView chart analysis and Pine Script development via Chrome DevTools Protocol',
 };
 
-const SERVER_INSTRUCTIONS = `TradingView MCP — 78 tools for reading and controlling a live TradingView Desktop chart.
+const SERVER_INSTRUCTIONS = `TradingView MCP — 81 tools for reading and controlling a live TradingView Desktop chart.
 
 TOOL SELECTION GUIDE — use this to pick the right tool:
 
@@ -34,6 +34,7 @@ Reading your chart:
 - quote_get → get real-time price snapshot (last, OHLC, volume)
 - news_get_ticker → get latest ticker-specific headlines with compact sentiment scoring
 - signal_get_snapshot → combine quote, price action, volume, visible indicators, and headlines
+- screener_scan → find lists of tickers across stocks, ETFs, crypto, forex, futures, and indices
 - data_get_ohlcv → get price bars. ALWAYS pass summary=true unless you need individual bars
 
 Reading custom Pine indicator output (line.new/label.new/table.new/box.new drawings):

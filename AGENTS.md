@@ -1,6 +1,6 @@
 # TradingView MCP — Codex Instructions
 
-80 MCP tools for reading and controlling a live TradingView Desktop chart via CDP (port 9222).
+81 MCP tools for reading and controlling a live TradingView Desktop chart via CDP (port 9222).
 
 This repository is Codex-ready:
 - `.codex-plugin/plugin.json` describes the Codex plugin surface.
@@ -34,6 +34,14 @@ Use `study_filter` parameter to target a specific indicator by name substring (e
 ### "What news matters for this ticker?"
 1. `news_get_ticker` → latest ticker-specific headlines with compact sentiment scoring
 2. `signal_get_snapshot` → quote, price action, volume context, visible indicators, and headlines in one response
+
+### "Find me a list of tickers from the TradingView screener"
+- `screener_scan` → scan TradingView screeners across `stock`, `etf`, `crypto`, `forex`, `futures`, `index`, `america`, `global`, or `cfd`
+- Use `query` to narrow by theme or keyword (e.g., `"semiconductor"`, `"bitcoin"`, `"uranium"`)
+- Use `exchange` for query-based lookups (e.g., `NASDAQ`, `NYSE`, `BINANCE`)
+- Use `tickers` to hydrate a specific symbol list and pull comparable snapshot rows
+- Use `min_price`, `max_price`, `min_volume`, `min_change_pct`, `max_change_pct` to cut the list down
+- Use `sort_by` with `symbol`, `price`, `change_pct`, `change_abs`, `volume`, or `market_cap`
 
 ### "Analyze my chart" (full report workflow)
 1. `quote_get` → current price
@@ -114,6 +122,7 @@ These tools can return large payloads. Follow these rules to avoid context bloat
 | `quote_get` | ~200 bytes |
 | `news_get_ticker` | ~2-6 KB |
 | `signal_get_snapshot` | ~3-8 KB |
+| `screener_scan` | ~2-10 KB depending on row count |
 | `data_get_study_values` | ~500 bytes (all indicators) |
 | `data_get_pine_lines` | ~1-3 KB per study (deduplicated levels) |
 | `data_get_pine_labels` | ~2-5 KB per study (capped at 50) |
