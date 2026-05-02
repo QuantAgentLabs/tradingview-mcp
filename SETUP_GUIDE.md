@@ -134,6 +134,8 @@ Recommended first test prompt in Codex:
 Use tv_health_check and tell me if TradingView is connected.
 ```
 
+If the plugin metadata is loaded, the user can also open the slash picker in Codex and select `TradingView` as the general chart workflow entrypoint.
+
 ## Step 7: Install CLI (Optional)
 
 To use the `tv` CLI command globally:

@@ -1,0 +1,4 @@
+interface:
+  display_name: "TradingView"
+  short_description: "Use TradingView MCP for charts, indicators, and Pine Script"
+  default_prompt: "Use TradingView MCP to inspect the current chart, switch symbols or timeframes, read indicators, take screenshots, or work on Pine Script."

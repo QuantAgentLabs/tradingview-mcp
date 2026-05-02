@@ -160,6 +160,8 @@ The default `.mcp.json` points Codex at the running OrbStack service:
 
 In Codex, load/use this repo as the MCP/plugin project. Codex connects to the already-running OrbStack MCP container through that URL, so you do not need Codex to spawn a fresh container for every connection.
 
+If the plugin metadata is loaded in Codex, you can also use the slash picker and choose `TradingView` instead of manually naming MCP tools. That entry is intended as the general-purpose entrypoint for chart work.
+
 ### 6. Optional: Add TradingView to Global Codex MCP Config
 
 If you want TradingView available in Codex from any workspace or thread, add it to your global Codex config instead of relying only on the repo-local `.mcp.json`.
@@ -189,6 +191,12 @@ First smoke test in Codex:
 
 ```text
 Use tv_health_check and tell me if TradingView is connected.
+```
+
+You can also start from the slash picker in Codex and choose `TradingView`, then type requests such as:
+
+```text
+What is SPY doing right now?
 ```
 
 ### Useful Commands
