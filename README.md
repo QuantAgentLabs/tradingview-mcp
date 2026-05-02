@@ -157,15 +157,22 @@ Keep TradingView open with a chart loaded.
 ### 2. Build the container
 
 ```bash
-docker compose build
+npm run orb:build
 ```
 
 ### 3. Use the CLI from Compose
 
 ```bash
-docker compose run --rm tv status
-docker compose run --rm tv quote
-docker compose run --rm tv screenshot -r chart
+npm run orb:status
+npm run orb:quote
+npm run orb:screenshot
+```
+
+For any other `tv` CLI command, pass it through the alias:
+
+```bash
+npm run orb:tv -- ohlcv --summary
+npm run orb:tv -- pine analyze --file scripts/current.pine
 ```
 
 The compose file defaults to:
@@ -186,10 +193,18 @@ TRADINGVIEW_CDP_HOST=host.docker.internal TRADINGVIEW_CDP_PORT=9223 docker compo
 For an MCP client that can launch a command over stdio, use:
 
 ```bash
-docker compose run --rm -T tradingview-mcp
+npm run orb:mcp
 ```
 
 `-T` disables TTY allocation so stdio MCP messages stay clean.
+
+The one-command local setup path is:
+
+```bash
+npm run orb:setup
+```
+
+That launches TradingView with CDP on macOS and builds the Compose image.
 
 ## CLI
 
