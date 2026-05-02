@@ -1,6 +1,6 @@
 # TradingView MCP — Codex Instructions
 
-78 MCP tools for reading and controlling a live TradingView Desktop chart via CDP (port 9222).
+80 MCP tools for reading and controlling a live TradingView Desktop chart via CDP (port 9222).
 
 This repository is Codex-ready:
 - `.codex-plugin/plugin.json` describes the Codex plugin surface.
@@ -30,6 +30,10 @@ Use `study_filter` parameter to target a specific indicator by name substring (e
 - `data_get_ohlcv` with `summary: true` → compact stats (high, low, range, change%, avg volume, last 5 bars)
 - `data_get_ohlcv` without summary → all bars (use `count` to limit, default 100)
 - `quote_get` → single latest price snapshot
+
+### "What news matters for this ticker?"
+1. `news_get_ticker` → latest ticker-specific headlines with compact sentiment scoring
+2. `signal_get_snapshot` → quote, price action, volume context, visible indicators, and headlines in one response
 
 ### "Analyze my chart" (full report workflow)
 1. `quote_get` → current price
@@ -108,6 +112,8 @@ These tools can return large payloads. Follow these rules to avoid context bloat
 | Tool | Typical Output |
 |------|---------------|
 | `quote_get` | ~200 bytes |
+| `news_get_ticker` | ~2-6 KB |
+| `signal_get_snapshot` | ~3-8 KB |
 | `data_get_study_values` | ~500 bytes (all indicators) |
 | `data_get_pine_lines` | ~1-3 KB per study (deduplicated levels) |
 | `data_get_pine_labels` | ~2-5 KB per study (capped at 50) |

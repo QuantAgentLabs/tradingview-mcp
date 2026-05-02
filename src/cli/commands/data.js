@@ -1,9 +1,31 @@
 import { register } from '../router.js';
 import * as core from '../../core/data.js';
+import { getTickerNews } from '../../core/news.js';
 
 register('quote', {
   description: 'Get real-time price quote',
   handler: (opts, positionals) => core.getQuote({ symbol: positionals[0] }),
+});
+
+register('news', {
+  description: 'Get ticker-specific news headlines for the current chart or a provided ticker',
+  options: {
+    limit: { type: 'string', short: 'n', description: 'Max headlines to return (default 10, max 25)' },
+  },
+  handler: (opts, positionals) => getTickerNews({
+    symbol: positionals[0],
+    limit: opts.limit ? Number(opts.limit) : undefined,
+  }),
+});
+
+register('signal', {
+  description: 'Get a compact trading signal snapshot (quote, price action, volume, indicators, news)',
+  options: {
+    headlines: { type: 'string', short: 'n', description: 'How many news headlines to include (default 5)' },
+  },
+  handler: (opts) => core.getSignalSnapshot({
+    headline_limit: opts.headlines ? Number(opts.headlines) : undefined,
+  }),
 });
 
 register('ohlcv', {

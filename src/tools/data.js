@@ -1,6 +1,7 @@
 import { z } from 'zod';
 import { jsonResult } from './_format.js';
 import * as core from '../core/data.js';
+import { getTickerNews } from '../core/news.js';
 
 export function registerDataTools(server) {
   server.tool('data_get_ohlcv', 'Get OHLCV bar data from the chart. Use summary=true for compact stats instead of all bars (saves context).', {
@@ -39,6 +40,21 @@ export function registerDataTools(server) {
     symbol: z.string().optional().describe('Symbol to quote (blank = current chart symbol)'),
   }, async ({ symbol }) => {
     try { return jsonResult(await core.getQuote({ symbol })); }
+    catch (err) { return jsonResult({ success: false, error: err.message }, true); }
+  });
+
+  server.tool('news_get_ticker', 'Get the latest ticker-specific news headlines for the current chart symbol or a provided ticker. Useful for adding fresh fundamental context to a trading view.', {
+    symbol: z.string().optional().describe('Ticker or TradingView symbol (blank = current chart symbol)'),
+    limit: z.coerce.number().optional().describe('Max headlines to return (default 10, max 25)'),
+  }, async ({ symbol, limit }) => {
+    try { return jsonResult(await getTickerNews({ symbol, limit })); }
+    catch (err) { return jsonResult({ success: false, error: err.message }, true); }
+  });
+
+  server.tool('signal_get_snapshot', 'Build a compact trading snapshot from the current chart: quote, price action, volume context, visible indicator values, and latest ticker news.', {
+    headline_limit: z.coerce.number().optional().describe('How many news headlines to include (default 5)'),
+  }, async ({ headline_limit }) => {
+    try { return jsonResult(await core.getSignalSnapshot({ headline_limit })); }
     catch (err) { return jsonResult({ success: false, error: err.message }, true); }
   });
 

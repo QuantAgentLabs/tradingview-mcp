@@ -32,6 +32,8 @@ Reading your chart:
 - chart_get_state → get symbol, timeframe, all indicator names + entity IDs (call first)
 - data_get_study_values → get current numeric values from ALL visible indicators (RSI, MACD, BB, EMA, etc.)
 - quote_get → get real-time price snapshot (last, OHLC, volume)
+- news_get_ticker → get latest ticker-specific headlines with compact sentiment scoring
+- signal_get_snapshot → combine quote, price action, volume, visible indicators, and headlines
 - data_get_ohlcv → get price bars. ALWAYS pass summary=true unless you need individual bars
 
 Reading custom Pine indicator output (line.new/label.new/table.new/box.new drawings):

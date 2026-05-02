@@ -436,6 +436,7 @@ Codex reads [`AGENTS.md`](AGENTS.md) when working in this project, and the plugi
 | You say... | Codex uses... |
 |------------|---------------|
 | "What's on my chart?" | `chart_get_state` → `data_get_study_values` → `quote_get` |
+| "What news matters for this ticker?" | `news_get_ticker` → `signal_get_snapshot` |
 | "What levels are showing?" | `data_get_pine_lines` → `data_get_pine_labels` |
 | "Read the session table" | `data_get_pine_tables` with `study_filter` |
 | "Give me a full analysis" | `quote_get` → `data_get_study_values` → `data_get_pine_lines` → `data_get_pine_labels` → `data_get_pine_tables` → `data_get_ohlcv` (summary) → `capture_screenshot` |
@@ -446,7 +447,7 @@ Codex reads [`AGENTS.md`](AGENTS.md) when working in this project, and the plugi
 | "Draw a level at 24500" | `draw_shape` (horizontal_line) |
 | "Take a screenshot" | `capture_screenshot` |
 
-## Tool Reference (78 MCP tools)
+## Tool Reference (80 MCP tools)
 
 ### Chart Reading
 
@@ -455,7 +456,11 @@ Codex reads [`AGENTS.md`](AGENTS.md) when working in this project, and the plugi
 | `chart_get_state` | First call — get symbol, timeframe, all indicator names + IDs | ~500B |
 | `data_get_study_values` | Read current RSI, MACD, BB, EMA values from all indicators | ~500B |
 | `quote_get` | Get latest price, OHLC, volume | ~200B |
+| `news_get_ticker` | Get latest ticker headlines with compact sentiment scoring | ~2-6KB |
+| `signal_get_snapshot` | Get quote, price action, volume context, visible indicators, and headlines | ~3-8KB |
 | `data_get_ohlcv` | Get price bars. **Use `summary: true`** for compact stats | 500B (summary) / 8KB (100 bars) |
+
+`news_get_ticker` uses public finance news feeds with source fallback. For broad indices such as `SP:SPX`, it maps to a liquid ETF proxy such as `SPY` to improve headline relevance.
 
 ### Custom Indicator Data (Pine Drawings)
 
