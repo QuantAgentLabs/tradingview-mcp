@@ -70,11 +70,12 @@ Gives your AI assistant eyes and hands on your own chart:
 
 ## Install with Codex
 
-Paste this into Codex and it will handle the rest:
+There are two good ways to use this repo with Codex:
 
-> Install the TradingView MCP plugin. Clone https://github.com/QuantAgentLabs/tradingview-mcp.git, run npm install, load the repo's `.codex-plugin/plugin.json` and `.mcp.json`, launch TradingView with the debug port, and verify the connection with tv_health_check.
+1. **Repo-local MCP config** — open this repo in Codex and let Codex use the bundled `.mcp.json`
+2. **Global Codex MCP config** — register the server once in `~/.codex/config.toml` so it is available from any thread
 
-Or follow the manual steps below.
+For most people using this on their own machine, the global Codex MCP setup is the cleanest option.
 
 ## Quick Start: Codex + OrbStack
 
@@ -159,6 +160,37 @@ The default `.mcp.json` points Codex at the running OrbStack service:
 
 In Codex, load/use this repo as the MCP/plugin project. Codex connects to the already-running OrbStack MCP container through that URL, so you do not need Codex to spawn a fresh container for every connection.
 
+### 6. Optional: Add TradingView to Global Codex MCP Config
+
+If you want TradingView available in Codex from any workspace or thread, add it to your global Codex config instead of relying only on the repo-local `.mcp.json`.
+
+Edit:
+
+```bash
+~/.codex/config.toml
+```
+
+Add:
+
+```toml
+[mcp_servers.tradingview]
+url = "http://127.0.0.1:3000/mcp"
+```
+
+Then fully restart Codex desktop.
+
+After restart, you should see the server in Codex MCP settings and be able to use TradingView tools from anywhere, as long as the local service is running:
+
+```bash
+npm run tvSetup
+```
+
+First smoke test in Codex:
+
+```text
+Use tv_health_check and tell me if TradingView is connected.
+```
+
 ### Useful Commands
 
 ```bash
@@ -222,6 +254,13 @@ If you are adding the OrbStack-backed server manually to an MCP client, use:
     }
   }
 }
+```
+
+For Codex global config specifically, add this to `~/.codex/config.toml`:
+
+```toml
+[mcp_servers.tradingview]
+url = "http://127.0.0.1:3000/mcp"
 ```
 
 Start the OrbStack service from the repo root first:
