@@ -2,6 +2,7 @@
  * Core data access logic.
  */
 import { evaluate, evaluateAsync, KNOWN_PATHS, safeString } from '../connection.js';
+import { getTickerNews } from './news.js';
 
 const MAX_OHLCV_BARS = 500;
 const MAX_TRADES = 20;
@@ -355,6 +356,116 @@ export async function getStudyValues() {
     })()
   `);
   return { success: true, study_count: data?.length || 0, studies: data || [] };
+}
+
+function average(values) {
+  if (!values.length) return null;
+  return values.reduce((sum, value) => sum + value, 0) / values.length;
+}
+
+function simpleMovingAverage(values, length) {
+  if (values.length < length) return null;
+  return average(values.slice(-length));
+}
+
+function averageTrueRange(bars, length = 14) {
+  if (bars.length < 2) return null;
+  const trs = [];
+  for (let i = 1; i < bars.length; i++) {
+    const prevClose = bars[i - 1].close;
+    const bar = bars[i];
+    const tr = Math.max(
+      bar.high - bar.low,
+      Math.abs(bar.high - prevClose),
+      Math.abs(bar.low - prevClose),
+    );
+    trs.push(tr);
+  }
+  if (trs.length < length) return average(trs);
+  return average(trs.slice(-length));
+}
+
+export async function getSignalSnapshot({ headline_limit, _deps } = {}) {
+  const loadOhlcv = _deps?.getOhlcv || getOhlcv;
+  const loadQuote = _deps?.getQuote || getQuote;
+  const loadStudyValues = _deps?.getStudyValues || getStudyValues;
+  const loadTickerNews = _deps?.getTickerNews || getTickerNews;
+
+  const barsResp = await loadOhlcv({ count: 100 });
+  const bars = barsResp.bars || [];
+  if (bars.length === 0) throw new Error('No bar data available for signal snapshot.');
+
+  const quote = await loadQuote();
+  let studies;
+  try {
+    studies = await loadStudyValues();
+  } catch {
+    studies = { success: false, indicators: [] };
+  }
+
+  let news;
+  try {
+    news = await loadTickerNews({ limit: headline_limit || 5, _deps });
+  } catch (error) {
+    news = { success: false, error: error.message, headlines: [] };
+  }
+
+  const closes = bars.map(bar => bar.close);
+  const volumes = bars.map(bar => bar.volume || 0);
+  const first = bars[0];
+  const last = bars[bars.length - 1];
+  const last5 = bars.length >= 5 ? bars[bars.length - 5].close : first.close;
+  const last20 = bars.length >= 20 ? bars[bars.length - 20].close : first.close;
+  const sma20 = simpleMovingAverage(closes, 20);
+  const sma50 = simpleMovingAverage(closes, 50);
+  const atr14 = averageTrueRange(bars, 14);
+  const avgVol20 = average(volumes.slice(-20)) || 0;
+  const lastVol = last.volume || 0;
+  const dailyRangePct = last.close ? ((last.high - last.low) / last.close) * 100 : null;
+
+  return {
+    success: true,
+    symbol: quote.symbol,
+    time: quote.time,
+    quote: {
+      last: quote.last,
+      open: quote.open,
+      high: quote.high,
+      low: quote.low,
+      close: quote.close,
+      volume: quote.volume,
+      bid: quote.bid,
+      ask: quote.ask,
+    },
+    price_action: {
+      period_from: first.time,
+      period_to: last.time,
+      close_change_pct_5: last5 ? +((((last.close - last5) / last5) * 100).toFixed(2)) : null,
+      close_change_pct_20: last20 ? +((((last.close - last20) / last20) * 100).toFixed(2)) : null,
+      range_pct_today: dailyRangePct != null ? +(dailyRangePct.toFixed(2)) : null,
+      sma20: sma20 != null ? +sma20.toFixed(2) : null,
+      sma50: sma50 != null ? +sma50.toFixed(2) : null,
+      distance_from_sma20_pct: sma20 ? +((((last.close - sma20) / sma20) * 100).toFixed(2)) : null,
+      distance_from_sma50_pct: sma50 ? +((((last.close - sma50) / sma50) * 100).toFixed(2)) : null,
+      atr14: atr14 != null ? +atr14.toFixed(2) : null,
+    },
+    volume_context: {
+      last_volume: lastVol,
+      avg_volume_20: Math.round(avgVol20),
+      volume_vs_avg_20: avgVol20 ? +(lastVol / avgVol20).toFixed(2) : null,
+    },
+    technical_context: studies.success === false ? { available: false, error: studies.error } : {
+      available: true,
+      indicator_count: studies.indicators?.length || 0,
+      indicators: studies.indicators || [],
+    },
+    news_context: news.success === false ? { available: false, error: news.error } : {
+      available: true,
+      source: news.source,
+      sentiment: news.sentiment,
+      headlines: news.headlines,
+    },
+  };
 }
 
 export async function getPineLines({ study_filter, verbose } = {}) {

@@ -1,6 +1,8 @@
 import { z } from 'zod';
 import { jsonResult } from './_format.js';
 import * as core from '../core/data.js';
+import { getTickerNews } from '../core/news.js';
+import { screenerScan } from '../core/screener.js';
 
 export function registerDataTools(server) {
   server.tool('data_get_ohlcv', 'Get OHLCV bar data from the chart. Use summary=true for compact stats instead of all bars (saves context).', {
@@ -39,6 +41,40 @@ export function registerDataTools(server) {
     symbol: z.string().optional().describe('Symbol to quote (blank = current chart symbol)'),
   }, async ({ symbol }) => {
     try { return jsonResult(await core.getQuote({ symbol })); }
+    catch (err) { return jsonResult({ success: false, error: err.message }, true); }
+  });
+
+  server.tool('news_get_ticker', 'Get the latest ticker-specific news headlines for the current chart symbol or a provided ticker. Useful for adding fresh fundamental context to a trading view.', {
+    symbol: z.string().optional().describe('Ticker or TradingView symbol (blank = current chart symbol)'),
+    limit: z.coerce.number().optional().describe('Max headlines to return (default 10, max 25)'),
+  }, async ({ symbol, limit }) => {
+    try { return jsonResult(await getTickerNews({ symbol, limit })); }
+    catch (err) { return jsonResult({ success: false, error: err.message }, true); }
+  });
+
+  server.tool('signal_get_snapshot', 'Build a compact trading snapshot from the current chart: quote, price action, volume context, visible indicator values, and latest ticker news.', {
+    headline_limit: z.coerce.number().optional().describe('How many news headlines to include (default 5)'),
+  }, async ({ headline_limit }) => {
+    try { return jsonResult(await core.getSignalSnapshot({ headline_limit })); }
+    catch (err) { return jsonResult({ success: false, error: err.message }, true); }
+  });
+
+  server.tool('screener_scan', 'Scan TradingView market screeners for stocks, ETFs, crypto, forex, futures, or indices. Useful for finding lists of tickers by market type, exchange, liquidity, price, or daily change.', {
+    market: z.string().optional().describe('Universe or market preset: stock, etf, crypto, forex, futures, index, america, global, or cfd'),
+    asset_type: z.string().optional().describe('Optional asset class override: stock, etf, crypto, forex, futures, index'),
+    query: z.string().optional().describe('Search keyword to narrow the universe before scanning (e.g., "bitcoin", "semiconductor", "gold")'),
+    tickers: z.string().optional().describe('Comma-separated symbols or JSON array to hydrate specific tickers (e.g., "AAPL,MSFT,QQQ" or ["NASDAQ:AAPL","NASDAQ:MSFT"])'),
+    exchange: z.string().optional().describe('Exchange filter for query-based lookup (e.g., NASDAQ, NYSE, BINANCE)'),
+    sort_by: z.enum(['symbol', 'price', 'change_pct', 'change_abs', 'volume', 'market_cap']).optional().describe('Sort field'),
+    sort_order: z.enum(['asc', 'desc']).optional().describe('Sort direction'),
+    limit: z.coerce.number().optional().describe('Max rows to return (default 20, max 100)'),
+    min_price: z.coerce.number().optional().describe('Minimum last price'),
+    max_price: z.coerce.number().optional().describe('Maximum last price'),
+    min_volume: z.coerce.number().optional().describe('Minimum volume'),
+    min_change_pct: z.coerce.number().optional().describe('Minimum daily % change'),
+    max_change_pct: z.coerce.number().optional().describe('Maximum daily % change'),
+  }, async (args) => {
+    try { return jsonResult(await screenerScan(args)); }
     catch (err) { return jsonResult({ success: false, error: err.message }, true); }
   });
 

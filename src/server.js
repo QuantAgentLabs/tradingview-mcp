@@ -1,5 +1,7 @@
 import { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
 import { StdioServerTransport } from '@modelcontextprotocol/sdk/server/stdio.js';
+import { StreamableHTTPServerTransport } from '@modelcontextprotocol/sdk/server/streamableHttp.js';
+import { createMcpExpressApp } from '@modelcontextprotocol/sdk/server/express.js';
 import { registerHealthTools } from './tools/health.js';
 import { registerChartTools } from './tools/chart.js';
 import { registerPineTools } from './tools/pine.js';
@@ -14,15 +16,15 @@ import { registerWatchlistTools } from './tools/watchlist.js';
 import { registerUiTools } from './tools/ui.js';
 import { registerPaneTools } from './tools/pane.js';
 import { registerTabTools } from './tools/tab.js';
+import { healthCheck } from './core/health.js';
 
-const server = new McpServer(
-  {
-    name: 'tradingview',
-    version: '2.0.0',
-    description: 'AI-assisted TradingView chart analysis and Pine Script development via Chrome DevTools Protocol',
-  },
-  {
-    instructions: `TradingView MCP — 78 tools for reading and controlling a live TradingView Desktop chart.
+const SERVER_INFO = {
+  name: 'tradingview',
+  version: '2.0.0',
+  description: 'Codex-ready TradingView chart analysis and Pine Script development via Chrome DevTools Protocol',
+};
+
+const SERVER_INSTRUCTIONS = `TradingView MCP — 81 tools for reading and controlling a live TradingView Desktop chart.
 
 TOOL SELECTION GUIDE — use this to pick the right tool:
 
@@ -30,6 +32,9 @@ Reading your chart:
 - chart_get_state → get symbol, timeframe, all indicator names + entity IDs (call first)
 - data_get_study_values → get current numeric values from ALL visible indicators (RSI, MACD, BB, EMA, etc.)
 - quote_get → get real-time price snapshot (last, OHLC, volume)
+- news_get_ticker → get latest ticker-specific headlines with compact sentiment scoring
+- signal_get_snapshot → combine quote, price action, volume, visible indicators, and headlines
+- screener_scan → find lists of tickers across stocks, ETFs, crypto, forex, futures, and indices
 - data_get_ohlcv → get price bars. ALWAYS pass summary=true unless you need individual bars
 
 Reading custom Pine indicator output (line.new/label.new/table.new/box.new drawings):
@@ -65,30 +70,192 @@ CONTEXT MANAGEMENT:
 - ALWAYS use study_filter on pine tools when you know which indicator you want
 - NEVER use verbose=true unless user specifically asks for raw data
 - Prefer capture_screenshot for visual context over pulling large datasets
-- Call chart_get_state ONCE at start, reuse entity IDs`,
-  }
-);
+- Call chart_get_state ONCE at start, reuse entity IDs`;
 
-// Register all tool groups
-registerHealthTools(server);
-registerChartTools(server);
-registerPineTools(server);
-registerDataTools(server);
-registerCaptureTools(server);
-registerDrawingTools(server);
-registerAlertTools(server);
-registerBatchTools(server);
-registerReplayTools(server);
-registerIndicatorTools(server);
-registerWatchlistTools(server);
-registerUiTools(server);
-registerPaneTools(server);
-registerTabTools(server);
+function writeStartupNotice() {
+  process.stderr.write('⚠  tradingview-mcp  |  Unofficial tool. Not affiliated with TradingView Inc.\n');
+  process.stderr.write('   Ensure your usage complies with TradingView\'s Terms of Use.\n\n');
+}
 
-// Startup notice (stderr so it doesn't interfere with MCP stdio protocol)
-process.stderr.write('⚠  tradingview-mcp  |  Unofficial tool. Not affiliated with TradingView Inc. or Anthropic.\n');
-process.stderr.write('   Ensure your usage complies with TradingView\'s Terms of Use.\n\n');
+function createTradingViewServer() {
+  const server = new McpServer(SERVER_INFO, {
+    instructions: SERVER_INSTRUCTIONS,
+  });
 
-// Start stdio transport
-const transport = new StdioServerTransport();
-await server.connect(transport);
+  registerHealthTools(server);
+  registerChartTools(server);
+  registerPineTools(server);
+  registerDataTools(server);
+  registerCaptureTools(server);
+  registerDrawingTools(server);
+  registerAlertTools(server);
+  registerBatchTools(server);
+  registerReplayTools(server);
+  registerIndicatorTools(server);
+  registerWatchlistTools(server);
+  registerUiTools(server);
+  registerPaneTools(server);
+  registerTabTools(server);
+
+  return server;
+}
+
+function getTransportMode() {
+  const arg = process.argv.find((value) => value.startsWith('--transport='));
+  if (arg) return arg.split('=')[1];
+  return process.env.MCP_TRANSPORT || 'stdio';
+}
+
+function getHttpHost() {
+  return process.env.MCP_HTTP_HOST || process.env.HOST || '0.0.0.0';
+}
+
+function getHttpPort() {
+  return Number(process.env.MCP_HTTP_PORT || process.env.PORT || 3000);
+}
+
+function getAllowedHosts() {
+  const raw = process.env.MCP_ALLOWED_HOSTS;
+  if (!raw) return ['127.0.0.1', 'localhost', '[::1]'];
+  return raw.split(',').map((value) => value.trim()).filter(Boolean);
+}
+
+async function startStdioServer() {
+  writeStartupNotice();
+  const server = createTradingViewServer();
+  const transport = new StdioServerTransport();
+  await server.connect(transport);
+}
+
+function jsonRpcMethodNotAllowed(res) {
+  res.status(405).json({
+    jsonrpc: '2.0',
+    error: {
+      code: -32000,
+      message: 'Method not allowed.',
+    },
+    id: null,
+  });
+}
+
+async function startHttpServer() {
+  writeStartupNotice();
+
+  const host = getHttpHost();
+  const port = getHttpPort();
+  const app = createMcpExpressApp({
+    host,
+    allowedHosts: getAllowedHosts(),
+  });
+
+  app.get('/', (_req, res) => {
+    res.json({
+      success: true,
+      name: SERVER_INFO.name,
+      version: SERVER_INFO.version,
+      transport: 'streamable-http',
+      endpoint: '/mcp',
+      ready: '/ready',
+      health: '/health',
+    });
+  });
+
+  app.get('/ready', (_req, res) => {
+    res.json({
+      success: true,
+      name: SERVER_INFO.name,
+      version: SERVER_INFO.version,
+      transport: 'streamable-http',
+      status: 'ready',
+    });
+  });
+
+  app.get('/health', async (_req, res) => {
+    try {
+      const tradingView = await healthCheck();
+      res.json({
+        success: true,
+        name: SERVER_INFO.name,
+        version: SERVER_INFO.version,
+        transport: 'streamable-http',
+        tradingview: tradingView,
+      });
+    } catch (error) {
+      res.status(503).json({
+        success: false,
+        name: SERVER_INFO.name,
+        version: SERVER_INFO.version,
+        transport: 'streamable-http',
+        error: error.message,
+        hint: 'Launch TradingView Desktop with CDP enabled, then keep a chart open.',
+      });
+    }
+  });
+
+  app.post('/mcp', async (req, res) => {
+    const server = createTradingViewServer();
+    const transport = new StreamableHTTPServerTransport({
+      sessionIdGenerator: undefined,
+    });
+
+    const closeResources = async () => {
+      try {
+        await transport.close();
+      } catch {}
+
+      try {
+        await server.close();
+      } catch {}
+    };
+
+    try {
+      await server.connect(transport);
+      res.on('close', () => {
+        void closeResources();
+      });
+      await transport.handleRequest(req, res, req.body);
+    } catch (error) {
+      await closeResources();
+      if (!res.headersSent) {
+        res.status(500).json({
+          jsonrpc: '2.0',
+          error: {
+            code: -32603,
+            message: 'Internal server error',
+            data: error.message,
+          },
+          id: null,
+        });
+      }
+    }
+  });
+
+  app.get('/mcp', (_req, res) => {
+    jsonRpcMethodNotAllowed(res);
+  });
+
+  app.delete('/mcp', (_req, res) => {
+    jsonRpcMethodNotAllowed(res);
+  });
+
+  const listener = app.listen(port, host, () => {
+    process.stderr.write(`tradingview-mcp http server listening on http://${host}:${port}/mcp\n`);
+  });
+
+  const shutdown = () => {
+    listener.close(() => {
+      process.exit(0);
+    });
+  };
+
+  process.on('SIGINT', shutdown);
+  process.on('SIGTERM', shutdown);
+}
+
+const mode = getTransportMode();
+
+if (mode === 'http') {
+  await startHttpServer();
+} else {
+  await startStdioServer();
+}

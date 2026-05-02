@@ -1,0 +1,4 @@
+interface:
+  display_name: "Pine Development"
+  short_description: "Build and debug Pine Script in Codex"
+  default_prompt: "Use $pine-develop to write, compile, and fix a Pine Script indicator in TradingView."

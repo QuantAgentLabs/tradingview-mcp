@@ -1,0 +1,4 @@
+interface:
+  display_name: "Replay Practice"
+  short_description: "Practice trades in TradingView replay"
+  default_prompt: "Use $replay-practice to start a replay session and track trades on the current chart."

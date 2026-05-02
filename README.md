@@ -1,6 +1,6 @@
 # TradingView MCP Bridge
 
-Personal AI assistant for your TradingView Desktop charts. Connects Claude Code to your locally running TradingView app via Chrome DevTools Protocol for AI-assisted chart analysis, Pine Script development, and workflow automation.
+Personal AI assistant bridge for your TradingView Desktop charts. Connects Codex, Codex MCP, and other MCP clients to your locally running TradingView app via Chrome DevTools Protocol for AI-assisted chart analysis, Pine Script development, and workflow automation.
 
 > [!WARNING]
 > **This tool is not affiliated with, endorsed by, or associated with TradingView Inc.** It interacts with your locally running TradingView Desktop application via Chrome DevTools Protocol. Review the [Disclaimer](#disclaimer) before use.
@@ -49,7 +49,7 @@ See [RESEARCH.md](RESEARCH.md) for open questions, findings, and related work.
 
 - **TradingView Desktop app** (paid subscription required for real-time data)
 - **Node.js 18+**
-- **Claude Code** with MCP support (for MCP tools) or any terminal (for CLI)
+- **Codex with MCP support** (for MCP tools and skills), any MCP client, or any terminal (for CLI)
 - **macOS, Windows, or Linux**
 
 ## What It Does
@@ -68,25 +68,187 @@ Gives your AI assistant eyes and hands on your own chart:
 - **CLI access** — every MCP tool is also a `tv` CLI command, pipe-friendly with JSON output
 - **Launch TradingView** — auto-detect and launch with debug mode from any platform
 
-## Install with Claude Code
+## Install with Codex
 
-Paste this into Claude Code and it will handle the rest:
+There are two good ways to use this repo with Codex:
 
-> Install the TradingView MCP server. Clone https://github.com/tradesdontlie/tradingview-mcp.git, run npm install, add it to my MCP config at ~/.claude/.mcp.json, and launch TradingView with the debug port. Then verify the connection with tv_health_check.
+1. **Repo-local MCP config** — open this repo in Codex and let Codex use the bundled `.mcp.json`
+2. **Global Codex MCP config** — register the server once in `~/.codex/config.toml` so it is available from any thread
 
-Or follow the manual steps below.
+If you also want a discoverable `TradingView` entry in the Codex slash picker, keep the plugin metadata enabled too. MCP server registration and plugin/skill discovery are separate Codex surfaces.
 
-## Quick Start
+## Quick Start: Codex + OrbStack
 
-### 1. Install
+This is the recommended setup. TradingView Desktop still runs on your Mac, but the MCP server itself runs as a persistent OrbStack container with an HTTP endpoint at `http://127.0.0.1:3000/mcp`.
+
+### 1. Prerequisites
+
+- TradingView Desktop installed and signed in
+- OrbStack running
+- Node.js 18+ for the npm helper scripts
+- Codex or another MCP client
+
+### 2. Install
 
 ```bash
-git clone https://github.com/tradesdontlie/tradingview-mcp.git
+git clone https://github.com/QuantAgentLabs/tradingview-mcp.git
 cd tradingview-mcp
 npm install
 ```
 
-### 2. Launch TradingView with CDP
+### 3. Launch TradingView, build the image, and start the MCP service
+
+```bash
+npm run tvSetup
+```
+
+This runs:
+
+```bash
+npm run tvLaunch
+npm run tvBuild
+npm run tvUp
+npm run tvStatus
+```
+
+`tvLaunch` opens TradingView Desktop with Chrome DevTools Protocol enabled on port `9222`. Keep TradingView open with a chart loaded. It is safe to rerun `tvLaunch`: if CDP is already active, the script exits cleanly instead of opening a second broken instance.
+
+`tvBuild` builds the OrbStack image. `tvUp` starts the long-running `tradingview-mcp` container in the background. `tvStatus` checks the HTTP service and confirms it can talk to TradingView.
+
+### 4. Verify the persistent MCP service
+
+```bash
+npm run tvStatus
+```
+
+Expected result:
+
+```json
+{
+  "success": true,
+  "transport": "streamable-http",
+  "tradingview": {
+    "cdp_connected": true,
+    "api_available": true
+  }
+}
+```
+
+If this fails, confirm TradingView is still open, a chart is loaded, and OrbStack is running.
+
+### 5. Connect Codex
+
+This repo includes Codex-ready metadata:
+
+- `.codex-plugin/plugin.json` — plugin description, skills path, and MCP config pointer
+- `.mcp.json` — persistent OrbStack HTTP MCP server entry
+- `AGENTS.md` — Codex project instructions and tool-selection guidance
+- `skills/` — Codex skills for common TradingView workflows
+
+The default `.mcp.json` points Codex at the running OrbStack service:
+
+```json
+{
+  "mcpServers": {
+    "tradingview": {
+      "type": "http",
+      "url": "http://127.0.0.1:3000/mcp"
+    }
+  }
+}
+```
+
+In Codex, load/use this repo as the MCP/plugin project. Codex connects to the already-running OrbStack MCP container through that URL, so you do not need Codex to spawn a fresh container for every connection.
+
+If the plugin metadata is loaded in Codex, you can also use the slash picker and choose `TradingView` instead of manually naming MCP tools. That entry is intended as the general-purpose entrypoint for chart work.
+
+### 6. Optional: Add TradingView to Global Codex MCP Config
+
+If you want TradingView available in Codex from any workspace or thread, add it to your global Codex config instead of relying only on the repo-local `.mcp.json`.
+
+Edit:
+
+```bash
+~/.codex/config.toml
+```
+
+Add:
+
+```toml
+[mcp_servers.tradingview]
+url = "http://127.0.0.1:3000/mcp"
+```
+
+Then fully restart Codex desktop.
+
+After restart, you should see the server in Codex MCP settings and be able to use TradingView tools from anywhere, as long as the local service is running:
+
+```bash
+npm run tvSetup
+```
+
+First smoke test in Codex:
+
+```text
+Use tv_health_check and tell me if TradingView is connected.
+```
+
+You can also start from the slash picker in Codex and choose `TradingView`, then type requests such as:
+
+```text
+What is SPY doing right now?
+```
+
+### 7. Optional: Enable the TradingView Slash-Picker Entry
+
+If you want `TradingView` to appear in the Codex slash picker or skill picker, you need the plugin marketplace metadata in addition to the global MCP server entry.
+
+This repo includes an example marketplace file at:
+
+```bash
+.agents/plugins/marketplace.json
+```
+
+That file points back to this repo as a local Codex plugin. A typical home-local setup looks like this:
+
+1. Create a local marketplace folder
+2. Symlink this repo into `plugins/tradingview-mcp`
+3. Copy or adapt `.agents/plugins/marketplace.json`
+4. Enable that marketplace/plugin in `~/.codex/config.toml`
+
+Example `~/.codex/config.toml` blocks:
+
+```toml
+[marketplaces.tradingview-global]
+last_updated = "2026-05-02T18:05:00Z"
+source_type = "local"
+source = "/Users/<you>/.codex/local-marketplaces/tradingview-global"
+
+[plugins."tradingview-mcp@tradingview-global"]
+enabled = true
+```
+
+With both of these in place:
+
+- `[mcp_servers.tradingview]` powers the MCP server in Codex settings
+- the marketplace/plugin entry powers the `TradingView` slash-picker entry
+
+### Useful Commands
+
+```bash
+npm run tvLaunch   # launch TradingView Desktop with CDP enabled
+npm run tvBuild    # build the OrbStack/Docker image
+npm run tvUp       # start the persistent MCP container in OrbStack
+npm run tvDown     # stop the persistent MCP container
+npm run tvStatus   # check the MCP HTTP service and TradingView connection
+npm run tvSetup    # launch TradingView, build the image, start the container, verify health
+```
+
+If `tvLaunch` says `TradingView CDP is already running at http://localhost:9222`, that is a healthy result.
+
+## Manual / Non-OrbStack Setup
+
+### Launch TradingView with CDP
 
 TradingView Desktop must be running with Chrome DevTools Protocol enabled on port 9222.
 
@@ -113,26 +275,95 @@ scripts\launch_tv_debug.bat
 **Or use the MCP tool** (auto-detects your install):
 > "Use tv_launch to start TradingView in debug mode"
 
-### 3. Add to Claude Code
+### Add to Codex MCP
 
-Add to your Claude Code MCP config (`~/.claude/.mcp.json` or project `.mcp.json`):
+This repo includes Codex-ready metadata:
+
+- `.codex-plugin/plugin.json` — plugin description, skills path, and MCP config pointer
+- `.mcp.json` — persistent OrbStack HTTP MCP server entry
+- `.mcp.local.json` — direct local Node stdio MCP server entry for development
+- `AGENTS.md` — Codex project instructions and tool-selection guidance
+- `skills/` — Codex skills for common TradingView workflows
+
+If you are adding the OrbStack-backed server manually to an MCP client, use:
 
 ```json
 {
   "mcpServers": {
     "tradingview": {
-      "command": "node",
-      "args": ["/path/to/tradingview-mcp/src/server.js"]
+      "type": "http",
+      "url": "http://127.0.0.1:3000/mcp"
     }
   }
 }
 ```
 
-Replace `/path/to/tradingview-mcp` with your actual path.
+For Codex global config specifically, add this to `~/.codex/config.toml`:
 
-### 4. Verify
+```toml
+[mcp_servers.tradingview]
+url = "http://127.0.0.1:3000/mcp"
+```
 
-Ask Claude: *"Use tv_health_check to verify TradingView is connected"*
+If you also want the slash-picker entry, use the example marketplace at `.agents/plugins/marketplace.json` as the starting point for a local Codex marketplace.
+
+Start the OrbStack service from the repo root first:
+
+```bash
+npm run tvLaunch
+npm run tvBuild
+npm run tvUp
+```
+
+### Verify
+
+Ask Codex: *"Use tv_health_check to verify TradingView is connected"*
+
+## OrbStack Details
+
+TradingView Desktop still runs on your Mac. The persistent `tradingview-mcp` container connects back to TradingView through OrbStack's host bridge and exposes MCP over HTTP on port `3000`.
+
+The compose file defaults to:
+
+```bash
+TRADINGVIEW_CDP_HOST=0.250.250.254
+TRADINGVIEW_CDP_PORT=9222
+```
+
+OrbStack resolves `host.docker.internal` too, but TradingView Desktop's Electron CDP endpoint rejects that hostname in the HTTP `Host` header. The OrbStack host IP avoids that rejection.
+
+Override them if needed:
+
+```bash
+TRADINGVIEW_CDP_HOST=0.250.250.254 TRADINGVIEW_CDP_PORT=9223 docker compose up -d tradingview-mcp
+```
+
+### MCP Server from Codex
+
+The default `.mcp.json` now points at the persistent OrbStack MCP server:
+
+```json
+{
+  "type": "http",
+  "url": "http://127.0.0.1:3000/mcp"
+}
+```
+
+Bring the service up once:
+
+```bash
+npm run tvUp
+```
+
+For direct local Node development instead of OrbStack, use `.mcp.local.json`.
+
+The one-command local setup path is:
+
+```bash
+npm run tvSetup
+```
+
+That launches TradingView with CDP on macOS, builds the Compose image, starts the persistent container, and verifies the connection.
 
 ## CLI
 
@@ -198,13 +429,15 @@ tv stream tables --filter Profiler       # table data monitoring
 tv stream all                            # all panes at once (multi-symbol)
 ```
 
-## How Claude Knows Which Tool to Use
+## How Codex Knows Which Tool to Use
 
-Claude reads [`CLAUDE.md`](CLAUDE.md) automatically when working in this project. It contains a complete decision tree:
+Codex reads [`AGENTS.md`](AGENTS.md) when working in this project, and the plugin manifest exposes the bundled skills under [`skills/`](skills/). `CLAUDE.md` remains for backwards compatibility with Claude Code. The Codex decision tree covers the same workflows:
 
-| You say... | Claude uses... |
+| You say... | Codex uses... |
 |------------|---------------|
 | "What's on my chart?" | `chart_get_state` → `data_get_study_values` → `quote_get` |
+| "What news matters for this ticker?" | `news_get_ticker` → `signal_get_snapshot` |
+| "Find me semiconductor ETFs" | `screener_scan` with `market: "etf"` and `query: "semiconductor"` |
 | "What levels are showing?" | `data_get_pine_lines` → `data_get_pine_labels` |
 | "Read the session table" | `data_get_pine_tables` with `study_filter` |
 | "Give me a full analysis" | `quote_get` → `data_get_study_values` → `data_get_pine_lines` → `data_get_pine_labels` → `data_get_pine_tables` → `data_get_ohlcv` (summary) → `capture_screenshot` |
@@ -215,7 +448,7 @@ Claude reads [`CLAUDE.md`](CLAUDE.md) automatically when working in this project
 | "Draw a level at 24500" | `draw_shape` (horizontal_line) |
 | "Take a screenshot" | `capture_screenshot` |
 
-## Tool Reference (78 MCP tools)
+## Tool Reference (81 MCP tools)
 
 ### Chart Reading
 
@@ -224,7 +457,36 @@ Claude reads [`CLAUDE.md`](CLAUDE.md) automatically when working in this project
 | `chart_get_state` | First call — get symbol, timeframe, all indicator names + IDs | ~500B |
 | `data_get_study_values` | Read current RSI, MACD, BB, EMA values from all indicators | ~500B |
 | `quote_get` | Get latest price, OHLC, volume | ~200B |
+| `news_get_ticker` | Get latest ticker headlines with compact sentiment scoring | ~2-6KB |
+| `signal_get_snapshot` | Get quote, price action, volume context, visible indicators, and headlines | ~3-8KB |
+| `screener_scan` | Scan TradingView screeners for lists of stocks, ETFs, crypto, forex, futures, or indices | ~2-10KB |
 | `data_get_ohlcv` | Get price bars. **Use `summary: true`** for compact stats | 500B (summary) / 8KB (100 bars) |
+
+`news_get_ticker` uses public finance news feeds with source fallback. For broad indices such as `SP:SPX`, it maps to a liquid ETF proxy such as `SPY` to improve headline relevance.
+
+`screener_scan` uses TradingView's screener backend to return ranked lists of instruments by market, theme, exchange, liquidity, price, and daily change. It is useful when you want "give me a list of crypto movers", "show me ETFs related to gold", or "scan these exact tickers and compare them."
+
+### Screener Examples
+
+Use the MCP tool:
+
+```json
+{
+  "market": "etf",
+  "query": "semiconductor",
+  "sort_by": "volume",
+  "limit": 10
+}
+```
+
+Or from the CLI:
+
+```bash
+tv screener --market stock --query semiconductor --sort volume --limit 10
+tv screener --market etf --query gold --sort change_pct --limit 10
+tv screener --market crypto --minVolume 1000000 --sort volume --limit 15
+tv screener --market stock --tickers AAPL,MSFT,NVDA,AMD --sort market_cap
+```
 
 ### Custom Indicator Data (Pine Drawings)
 
@@ -348,7 +610,7 @@ npm test
 ## Architecture
 
 ```
-Claude Code  ←→  MCP Server (stdio)  ←→  CDP (port 9222)  ←→  TradingView Desktop (Electron)
+Codex / MCP Client  ←→  MCP Server (stdio)  ←→  CDP (port 9222)  ←→  TradingView Desktop (Electron)
 ```
 
 - **Transport**: MCP over stdio (78 tools) + CLI (`tv` command, 30 commands with 66 subcommands)
@@ -360,9 +622,10 @@ Claude Code  ←→  MCP Server (stdio)  ←→  CDP (port 9222)  ←→  Tradin
 
 This project is not affiliated with, endorsed by, or associated with:
 - **TradingView Inc.** — TradingView is a trademark of TradingView Inc.
-- **Anthropic** — Claude and Claude Code are trademarks of Anthropic, PBC.
+- **OpenAI** — Codex is a trademark/service of OpenAI.
+- **Anthropic** — Claude, Claude Code, and Model Context Protocol references are trademarks or projects of Anthropic, PBC.
 
-This tool is an independent MCP server that connects to Claude Code via the standard MCP protocol. It does not contain or modify any Anthropic software.
+This tool is an independent MCP server that connects to Codex and other MCP clients via the standard MCP protocol. It does not contain or modify any OpenAI, Anthropic, or TradingView software.
 
 ## Disclaimer
 

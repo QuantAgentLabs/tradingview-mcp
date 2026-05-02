@@ -1,0 +1,44 @@
+{
+  "name": "tradingview-mcp",
+  "version": "1.0.0",
+  "description": "Codex plugin and MCP bridge for AI-assisted TradingView Desktop chart analysis, Pine Script development, and local workflow automation via Chrome DevTools Protocol.",
+  "author": {
+    "name": "QuantAgentLabs",
+    "url": "https://github.com/QuantAgentLabs"
+  },
+  "homepage": "https://github.com/QuantAgentLabs/tradingview-mcp",
+  "repository": "https://github.com/QuantAgentLabs/tradingview-mcp",
+  "license": "MIT",
+  "keywords": [
+    "codex",
+    "mcp",
+    "tradingview",
+    "pine-script",
+    "technical-analysis",
+    "chrome-devtools-protocol"
+  ],
+  "skills": "./skills/",
+  "mcpServers": "./.mcp.json",
+  "interface": {
+    "displayName": "TradingView MCP",
+    "shortDescription": "Control TradingView Desktop from Codex",
+    "longDescription": "TradingView MCP gives Codex structured tools for reading and controlling a locally running TradingView Desktop chart. Use it for chart analysis, Pine Script development, replay practice, strategy reporting, screenshots, drawings, alerts, watchlists, layouts, and CLI automation. The default MCP server runs as a persistent OrbStack/Docker service and connects to TradingView Desktop through Chrome DevTools Protocol.",
+    "developerName": "QuantAgentLabs",
+    "category": "Finance",
+    "capabilities": [
+      "Interactive",
+      "Read",
+      "Write"
+    ],
+    "websiteURL": "https://github.com/QuantAgentLabs/tradingview-mcp",
+    "privacyPolicyURL": "https://github.com/QuantAgentLabs/tradingview-mcp#how-it-works-and-why-its-safe-to-run",
+    "termsOfServiceURL": "https://github.com/QuantAgentLabs/tradingview-mcp#disclaimer",
+    "defaultPrompt": [
+      "Analyze the chart currently open in TradingView.",
+      "Help me debug the Pine Script in the editor.",
+      "Scan ES1!, NQ1!, YM1! for intraday setups."
+    ],
+    "brandColor": "#1D4ED8",
+    "screenshots": []
+  }
+}

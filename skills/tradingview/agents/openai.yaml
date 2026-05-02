@@ -1,0 +1,4 @@
+interface:
+  display_name: "TradingView"
+  short_description: "General TradingView MCP entrypoint"
+  default_prompt: "Use $tradingview to work with the current TradingView chart, inspect price and indicators, switch symbols or timeframes, or work on Pine Script."

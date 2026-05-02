@@ -1,9 +1,66 @@
 import { register } from '../router.js';
 import * as core from '../../core/data.js';
+import { getTickerNews } from '../../core/news.js';
+import { screenerScan } from '../../core/screener.js';
 
 register('quote', {
   description: 'Get real-time price quote',
   handler: (opts, positionals) => core.getQuote({ symbol: positionals[0] }),
+});
+
+register('news', {
+  description: 'Get ticker-specific news headlines for the current chart or a provided ticker',
+  options: {
+    limit: { type: 'string', short: 'n', description: 'Max headlines to return (default 10, max 25)' },
+  },
+  handler: (opts, positionals) => getTickerNews({
+    symbol: positionals[0],
+    limit: opts.limit ? Number(opts.limit) : undefined,
+  }),
+});
+
+register('signal', {
+  description: 'Get a compact trading signal snapshot (quote, price action, volume, indicators, news)',
+  options: {
+    headlines: { type: 'string', short: 'n', description: 'How many news headlines to include (default 5)' },
+  },
+  handler: (opts) => core.getSignalSnapshot({
+    headline_limit: opts.headlines ? Number(opts.headlines) : undefined,
+  }),
+});
+
+register('screener', {
+  description: 'Scan TradingView screeners for stocks, ETFs, crypto, forex, futures, or indices',
+  options: {
+    market: { type: 'string', short: 'm', description: 'Market preset: stock, etf, crypto, forex, futures, index, america, global, cfd' },
+    asset: { type: 'string', short: 'a', description: 'Optional asset class override: stock, etf, crypto, forex, futures, index' },
+    query: { type: 'string', short: 'q', description: 'Search keyword to narrow the universe' },
+    tickers: { type: 'string', short: 't', description: 'Comma-separated or JSON array of tickers to hydrate' },
+    exchange: { type: 'string', short: 'e', description: 'Exchange filter for query lookup' },
+    sort: { type: 'string', short: 's', description: 'Sort by: symbol, price, change_pct, change_abs, volume, market_cap' },
+    order: { type: 'string', short: 'o', description: 'Sort order: asc or desc' },
+    limit: { type: 'string', short: 'n', description: 'Max rows to return (default 20, max 100)' },
+    minPrice: { type: 'string', description: 'Minimum last price' },
+    maxPrice: { type: 'string', description: 'Maximum last price' },
+    minVolume: { type: 'string', description: 'Minimum volume' },
+    minChangePct: { type: 'string', description: 'Minimum daily % change' },
+    maxChangePct: { type: 'string', description: 'Maximum daily % change' },
+  },
+  handler: (opts) => screenerScan({
+    market: opts.market,
+    asset_type: opts.asset,
+    query: opts.query,
+    tickers: opts.tickers,
+    exchange: opts.exchange,
+    sort_by: opts.sort,
+    sort_order: opts.order,
+    limit: opts.limit ? Number(opts.limit) : undefined,
+    min_price: opts.minPrice ? Number(opts.minPrice) : undefined,
+    max_price: opts.maxPrice ? Number(opts.maxPrice) : undefined,
+    min_volume: opts.minVolume ? Number(opts.minVolume) : undefined,
+    min_change_pct: opts.minChangePct ? Number(opts.minChangePct) : undefined,
+    max_change_pct: opts.maxChangePct ? Number(opts.maxChangePct) : undefined,
+  }),
 });
 
 register('ohlcv', {
