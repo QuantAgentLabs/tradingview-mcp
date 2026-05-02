@@ -158,22 +158,13 @@ Keep TradingView open with a chart loaded.
 ### 2. Build the container
 
 ```bash
-npm run orb:build
+npm run tvBuild
 ```
 
-### 3. Use the CLI from Compose
+### 3. Verify the container can reach TradingView
 
 ```bash
-npm run orb:status
-npm run orb:quote
-npm run orb:screenshot
-```
-
-For any other `tv` CLI command, pass it through the alias:
-
-```bash
-npm run orb:tv -- ohlcv --summary
-npm run orb:tv -- pine analyze --file scripts/current.pine
+npm run tvStatus
 ```
 
 The compose file defaults to:
@@ -204,12 +195,18 @@ The default `.mcp.json` now runs the MCP server in OrbStack through Docker Compo
 
 You normally do not run this manually. Codex starts it when it connects to the MCP server. `-T` disables TTY allocation so stdio MCP messages stay clean.
 
+For manual MCP debugging, use:
+
+```bash
+npm run tvMCP
+```
+
 For direct local Node development instead of OrbStack, use `.mcp.local.json`.
 
 The one-command local setup path is:
 
 ```bash
-npm run orb:setup
+npm run tvSetup
 ```
 
 That launches TradingView with CDP on macOS and builds the Compose image.

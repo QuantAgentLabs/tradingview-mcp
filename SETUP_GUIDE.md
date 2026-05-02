@@ -109,24 +109,22 @@ TradingView Desktop must still run on the host machine with CDP enabled:
 Build the container:
 
 ```bash
-npm run orb:build
+npm run tvBuild
 ```
 
-Run CLI commands through Compose:
+Verify the container can reach TradingView:
 
 ```bash
-npm run orb:status
-npm run orb:quote
-npm run orb:tv -- screenshot -r chart
+npm run tvStatus
 ```
 
 Codex launches the MCP server over stdio through Docker Compose using `.mcp.json`. For manual debugging only, run:
 
 ```bash
-npm run orb:mcp
+npm run tvMCP
 ```
 
-Use `npm run orb:setup` to launch TradingView on macOS and build the container in one command.
+Use `npm run tvSetup` to launch TradingView on macOS and build the container in one command.
 
 The compose defaults use `TRADINGVIEW_CDP_HOST=0.250.250.254` and `TRADINGVIEW_CDP_PORT=9222`. `0.250.250.254` is OrbStack's host IP; it avoids TradingView Desktop's Electron CDP rejection of non-localhost hostnames such as `host.docker.internal`.
 
