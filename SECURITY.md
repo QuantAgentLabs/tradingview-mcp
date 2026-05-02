@@ -21,7 +21,7 @@ This project connects to a locally running TradingView Desktop instance via Chro
 
 - TradingView's own security (report to TradingView directly)
 - Chrome DevTools Protocol security (report to Google/Chromium)
-- Claude Code or MCP SDK security (report to Anthropic)
+- Codex, MCP client, or upstream MCP SDK security (report to the relevant upstream project)
 
 ## Best Practices for Users
 

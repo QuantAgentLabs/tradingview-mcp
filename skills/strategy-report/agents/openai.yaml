@@ -1,0 +1,4 @@
+interface:
+  display_name: "Strategy Report"
+  short_description: "Analyze TradingView strategy results"
+  default_prompt: "Use $strategy-report to gather strategy metrics and produce a concise performance report."

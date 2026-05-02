@@ -19,7 +19,7 @@ const server = new McpServer(
   {
     name: 'tradingview',
     version: '2.0.0',
-    description: 'AI-assisted TradingView chart analysis and Pine Script development via Chrome DevTools Protocol',
+    description: 'Codex-ready TradingView chart analysis and Pine Script development via Chrome DevTools Protocol',
   },
   {
     instructions: `TradingView MCP — 78 tools for reading and controlling a live TradingView Desktop chart.
@@ -86,7 +86,7 @@ registerPaneTools(server);
 registerTabTools(server);
 
 // Startup notice (stderr so it doesn't interfere with MCP stdio protocol)
-process.stderr.write('⚠  tradingview-mcp  |  Unofficial tool. Not affiliated with TradingView Inc. or Anthropic.\n');
+process.stderr.write('⚠  tradingview-mcp  |  Unofficial tool. Not affiliated with TradingView Inc.\n');
 process.stderr.write('   Ensure your usage complies with TradingView\'s Terms of Use.\n\n');
 
 // Start stdio transport

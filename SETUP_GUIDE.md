@@ -1,27 +1,34 @@
-# Setup Guide for Claude Code
+# Setup Guide for Codex and MCP Clients
 
-This file is a step-by-step guide for Claude Code (or any LLM agent) to install and configure the TradingView MCP server. If a user asks you to install or set up this project, follow these steps exactly.
+This file is a step-by-step guide for Codex, Codex MCP, or any MCP-capable LLM client to install and configure the TradingView MCP server. If a user asks you to install or set up this project, follow these steps exactly.
 
 ## Step 1: Clone and Install
 
 ```bash
-git clone https://github.com/tradesdontlie/tradingview-mcp.git ~/tradingview-mcp
+git clone https://github.com/QuantAgentLabs/tradingview-mcp.git ~/tradingview-mcp
 cd ~/tradingview-mcp
 npm install
 ```
 
 If the user specifies a different install path, use that instead of `~/tradingview-mcp`.
 
-## Step 2: Add to MCP Config
+## Step 2: Add to Codex MCP
 
-Add the server to the user's Claude Code MCP configuration. The config file is at `~/.claude/.mcp.json` (global) or `.mcp.json` (project-level).
+For Codex plugin installs, use the repo metadata:
+
+- `.codex-plugin/plugin.json` describes the plugin and points Codex at the bundled skills.
+- `.mcp.json` registers the local `tradingview` MCP server.
+- `skills/` contains the Codex skills that explain common TradingView workflows.
+
+For a manual MCP client setup, merge this server entry into the client's MCP configuration:
 
 ```json
 {
   "mcpServers": {
     "tradingview": {
       "command": "node",
-      "args": ["<INSTALL_PATH>/src/server.js"]
+      "args": ["<INSTALL_PATH>/src/server.js"],
+      "cwd": "<INSTALL_PATH>"
     }
   }
 }
@@ -56,12 +63,12 @@ Linux:
 # or: tradingview --remote-debugging-port=9222
 ```
 
-## Step 4: Restart Claude Code
+## Step 4: Restart or Reload Codex
 
-The MCP server only loads when Claude Code starts. After adding the config:
+Most MCP clients load servers at startup or plugin reload time. After adding the config:
 
-1. Exit Claude Code (Ctrl+C)
-2. Relaunch Claude Code
+1. Restart or reload Codex/plugin configuration
+2. Confirm the `tradingview` MCP server appears in the available tools
 3. The tradingview MCP server should connect automatically
 
 ## Step 5: Verify Connection
@@ -96,13 +103,15 @@ Then `tv status`, `tv quote`, `tv pine compile`, etc. work from anywhere.
 |---------|----------|
 | `cdp_connected: false` | Launch TradingView with `--remote-debugging-port=9222` |
 | `ECONNREFUSED` | TradingView isn't running or port 9222 is blocked |
-| MCP server not showing in Claude Code | Check `~/.claude/.mcp.json` syntax, restart Claude Code |
+| MCP server not showing in Codex | Check `.mcp.json` syntax, restart or reload Codex/plugin configuration |
 | `tv` command not found | Run `npm link` from the project directory |
 | Tools return stale data | TradingView may still be loading — wait a few seconds |
 | Pine Editor tools fail | Open the Pine Editor panel first (`ui_open_panel pine-editor open`) |
 
 ## What to Read Next
 
-- `CLAUDE.md` — Decision tree for which tool to use when (auto-loaded by Claude Code)
+- `AGENTS.md` — Codex project instructions and tool decision tree
+- `.codex-plugin/plugin.json` — Codex plugin description and integration metadata
+- `.mcp.json` — MCP server configuration for Codex/plugin installs
 - `README.md` — Full tool reference (78 MCP tools, 30 CLI commands)
 - `RESEARCH.md` — Research context and open questions

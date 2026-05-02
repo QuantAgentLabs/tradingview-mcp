@@ -1,0 +1,4 @@
+interface:
+  display_name: "Multi-Symbol Scan"
+  short_description: "Screen symbols for trading setups"
+  default_prompt: "Use $multi-symbol-scan to compare ES1!, NQ1!, and YM1! for the strongest current setup."

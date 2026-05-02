@@ -1,6 +1,6 @@
 # TradingView MCP Bridge
 
-Personal AI assistant for your TradingView Desktop charts. Connects Claude Code to your locally running TradingView app via Chrome DevTools Protocol for AI-assisted chart analysis, Pine Script development, and workflow automation.
+Personal AI assistant bridge for your TradingView Desktop charts. Connects Codex, Codex MCP, and other MCP clients to your locally running TradingView app via Chrome DevTools Protocol for AI-assisted chart analysis, Pine Script development, and workflow automation.
 
 > [!WARNING]
 > **This tool is not affiliated with, endorsed by, or associated with TradingView Inc.** It interacts with your locally running TradingView Desktop application via Chrome DevTools Protocol. Review the [Disclaimer](#disclaimer) before use.
@@ -49,7 +49,7 @@ See [RESEARCH.md](RESEARCH.md) for open questions, findings, and related work.
 
 - **TradingView Desktop app** (paid subscription required for real-time data)
 - **Node.js 18+**
-- **Claude Code** with MCP support (for MCP tools) or any terminal (for CLI)
+- **Codex with MCP support** (for MCP tools and skills), any MCP client, or any terminal (for CLI)
 - **macOS, Windows, or Linux**
 
 ## What It Does
@@ -68,11 +68,11 @@ Gives your AI assistant eyes and hands on your own chart:
 - **CLI access** — every MCP tool is also a `tv` CLI command, pipe-friendly with JSON output
 - **Launch TradingView** — auto-detect and launch with debug mode from any platform
 
-## Install with Claude Code
+## Install with Codex
 
-Paste this into Claude Code and it will handle the rest:
+Paste this into Codex and it will handle the rest:
 
-> Install the TradingView MCP server. Clone https://github.com/tradesdontlie/tradingview-mcp.git, run npm install, add it to my MCP config at ~/.claude/.mcp.json, and launch TradingView with the debug port. Then verify the connection with tv_health_check.
+> Install the TradingView MCP plugin. Clone https://github.com/QuantAgentLabs/tradingview-mcp.git, run npm install, load the repo's `.codex-plugin/plugin.json` and `.mcp.json`, launch TradingView with the debug port, and verify the connection with tv_health_check.
 
 Or follow the manual steps below.
 
@@ -81,7 +81,7 @@ Or follow the manual steps below.
 ### 1. Install
 
 ```bash
-git clone https://github.com/tradesdontlie/tradingview-mcp.git
+git clone https://github.com/QuantAgentLabs/tradingview-mcp.git
 cd tradingview-mcp
 npm install
 ```
@@ -113,16 +113,24 @@ scripts\launch_tv_debug.bat
 **Or use the MCP tool** (auto-detects your install):
 > "Use tv_launch to start TradingView in debug mode"
 
-### 3. Add to Claude Code
+### 3. Add to Codex MCP
 
-Add to your Claude Code MCP config (`~/.claude/.mcp.json` or project `.mcp.json`):
+This repo includes Codex-ready metadata:
+
+- `.codex-plugin/plugin.json` — plugin description, skills path, and MCP config pointer
+- `.mcp.json` — local stdio MCP server entry
+- `AGENTS.md` — Codex project instructions and tool-selection guidance
+- `skills/` — Codex skills for common TradingView workflows
+
+If you are adding the server manually to an MCP client, use:
 
 ```json
 {
   "mcpServers": {
     "tradingview": {
       "command": "node",
-      "args": ["/path/to/tradingview-mcp/src/server.js"]
+      "args": ["/path/to/tradingview-mcp/src/server.js"],
+      "cwd": "/path/to/tradingview-mcp"
     }
   }
 }
@@ -132,7 +140,7 @@ Replace `/path/to/tradingview-mcp` with your actual path.
 
 ### 4. Verify
 
-Ask Claude: *"Use tv_health_check to verify TradingView is connected"*
+Ask Codex: *"Use tv_health_check to verify TradingView is connected"*
 
 ## CLI
 
@@ -198,11 +206,11 @@ tv stream tables --filter Profiler       # table data monitoring
 tv stream all                            # all panes at once (multi-symbol)
 ```
 
-## How Claude Knows Which Tool to Use
+## How Codex Knows Which Tool to Use
 
-Claude reads [`CLAUDE.md`](CLAUDE.md) automatically when working in this project. It contains a complete decision tree:
+Codex reads [`AGENTS.md`](AGENTS.md) when working in this project, and the plugin manifest exposes the bundled skills under [`skills/`](skills/). `CLAUDE.md` remains for backwards compatibility with Claude Code. The Codex decision tree covers the same workflows:
 
-| You say... | Claude uses... |
+| You say... | Codex uses... |
 |------------|---------------|
 | "What's on my chart?" | `chart_get_state` → `data_get_study_values` → `quote_get` |
 | "What levels are showing?" | `data_get_pine_lines` → `data_get_pine_labels` |
@@ -348,7 +356,7 @@ npm test
 ## Architecture
 
 ```
-Claude Code  ←→  MCP Server (stdio)  ←→  CDP (port 9222)  ←→  TradingView Desktop (Electron)
+Codex / MCP Client  ←→  MCP Server (stdio)  ←→  CDP (port 9222)  ←→  TradingView Desktop (Electron)
 ```
 
 - **Transport**: MCP over stdio (78 tools) + CLI (`tv` command, 30 commands with 66 subcommands)
@@ -360,9 +368,10 @@ Claude Code  ←→  MCP Server (stdio)  ←→  CDP (port 9222)  ←→  Tradin
 
 This project is not affiliated with, endorsed by, or associated with:
 - **TradingView Inc.** — TradingView is a trademark of TradingView Inc.
-- **Anthropic** — Claude and Claude Code are trademarks of Anthropic, PBC.
+- **OpenAI** — Codex is a trademark/service of OpenAI.
+- **Anthropic** — Claude, Claude Code, and Model Context Protocol references are trademarks or projects of Anthropic, PBC.
 
-This tool is an independent MCP server that connects to Claude Code via the standard MCP protocol. It does not contain or modify any Anthropic software.
+This tool is an independent MCP server that connects to Codex and other MCP clients via the standard MCP protocol. It does not contain or modify any OpenAI, Anthropic, or TradingView software.
 
 ## Disclaimer
 

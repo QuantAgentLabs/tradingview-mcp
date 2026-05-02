@@ -1,6 +1,13 @@
-# TradingView MCP — Claude Instructions
+# TradingView MCP — Codex Instructions
 
-78 tools for reading and controlling a live TradingView Desktop chart via CDP (port 9222).
+78 MCP tools for reading and controlling a live TradingView Desktop chart via CDP (port 9222).
+
+This repository is Codex-ready:
+- `.codex-plugin/plugin.json` describes the Codex plugin surface.
+- `.mcp.json` registers the `tradingview` MCP server for Codex/plugin installs.
+- `skills/*/SKILL.md` contains focused Codex skills for chart analysis, Pine development, strategy reports, replay practice, and multi-symbol scans.
+
+Use the bundled skills when the user asks for those workflows, and use the MCP tools directly for smaller chart operations.
 
 ## Decision Tree — Which Tool When
 
@@ -123,7 +130,7 @@ These tools can return large payloads. Follow these rules to avoid context bloat
 ## Architecture
 
 ```
-Claude Code ←→ MCP Server (stdio) ←→ CDP (localhost:9222) ←→ TradingView Desktop (Electron)
+Codex ←→ MCP Server (stdio) ←→ CDP (localhost:9222) ←→ TradingView Desktop (Electron)
 ```
 
 Pine graphics path: `study._graphics._primitivesCollection.dwglines.get('lines').get(false)._primitivesDataById`
