@@ -118,18 +118,19 @@ scripts\launch_tv_debug.bat
 This repo includes Codex-ready metadata:
 
 - `.codex-plugin/plugin.json` — plugin description, skills path, and MCP config pointer
-- `.mcp.json` — local stdio MCP server entry
+- `.mcp.json` — OrbStack/Docker Compose stdio MCP server entry
+- `.mcp.local.json` — direct local Node stdio MCP server entry for development
 - `AGENTS.md` — Codex project instructions and tool-selection guidance
 - `skills/` — Codex skills for common TradingView workflows
 
-If you are adding the server manually to an MCP client, use:
+If you are adding the OrbStack-backed server manually to an MCP client, use:
 
 ```json
 {
   "mcpServers": {
     "tradingview": {
-      "command": "node",
-      "args": ["/path/to/tradingview-mcp/src/server.js"],
+      "command": "docker",
+      "args": ["compose", "run", "--rm", "--build", "-T", "tradingview-mcp"],
       "cwd": "/path/to/tradingview-mcp"
     }
   }
@@ -190,15 +191,20 @@ Override them if needed:
 TRADINGVIEW_CDP_HOST=0.250.250.254 TRADINGVIEW_CDP_PORT=9223 docker compose run --rm tv status
 ```
 
-### 4. Run the MCP server through Compose
+### 4. Use the MCP server from Codex
 
-For an MCP client that can launch a command over stdio, use:
+The default `.mcp.json` now runs the MCP server in OrbStack through Docker Compose:
 
-```bash
-npm run orb:mcp
+```json
+{
+  "command": "docker",
+  "args": ["compose", "run", "--rm", "--build", "-T", "tradingview-mcp"]
+}
 ```
 
-`-T` disables TTY allocation so stdio MCP messages stay clean.
+You normally do not run this manually. Codex starts it when it connects to the MCP server. `-T` disables TTY allocation so stdio MCP messages stay clean.
+
+For direct local Node development instead of OrbStack, use `.mcp.local.json`.
 
 The one-command local setup path is:
 

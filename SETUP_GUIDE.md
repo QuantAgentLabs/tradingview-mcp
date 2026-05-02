@@ -17,7 +17,8 @@ If the user specifies a different install path, use that instead of `~/tradingvi
 For Codex plugin installs, use the repo metadata:
 
 - `.codex-plugin/plugin.json` describes the plugin and points Codex at the bundled skills.
-- `.mcp.json` registers the local `tradingview` MCP server.
+- `.mcp.json` registers the OrbStack-backed `tradingview` MCP server through Docker Compose.
+- `.mcp.local.json` registers the direct local Node server for development.
 - `skills/` contains the Codex skills that explain common TradingView workflows.
 
 For a manual MCP client setup, merge this server entry into the client's MCP configuration:
@@ -26,8 +27,8 @@ For a manual MCP client setup, merge this server entry into the client's MCP con
 {
   "mcpServers": {
     "tradingview": {
-      "command": "node",
-      "args": ["<INSTALL_PATH>/src/server.js"],
+      "command": "docker",
+      "args": ["compose", "run", "--rm", "--build", "-T", "tradingview-mcp"],
       "cwd": "<INSTALL_PATH>"
     }
   }
@@ -119,7 +120,7 @@ npm run orb:quote
 npm run orb:tv -- screenshot -r chart
 ```
 
-Run the MCP server over stdio:
+Codex launches the MCP server over stdio through Docker Compose using `.mcp.json`. For manual debugging only, run:
 
 ```bash
 npm run orb:mcp

@@ -1,9 +1,14 @@
 {
   "mcpServers": {
     "tradingview": {
-      "command": "node",
+      "command": "docker",
       "args": [
-        "./src/server.js"
+        "compose",
+        "run",
+        "--rm",
+        "--build",
+        "-T",
+        "tradingview-mcp"
       ],
       "cwd": "."
     }
