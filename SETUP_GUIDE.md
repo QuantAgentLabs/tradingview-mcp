@@ -97,12 +97,42 @@ npm link
 
 Then `tv status`, `tv quote`, `tv pine compile`, etc. work from anywhere.
 
+## Docker Compose / OrbStack (Optional)
+
+TradingView Desktop must still run on the host machine with CDP enabled:
+
+```bash
+./scripts/launch_tv_debug_mac.sh
+```
+
+Build the container:
+
+```bash
+docker compose build
+```
+
+Run CLI commands through Compose:
+
+```bash
+docker compose run --rm tv status
+docker compose run --rm tv quote
+```
+
+Run the MCP server over stdio:
+
+```bash
+docker compose run --rm -T tradingview-mcp
+```
+
+The compose defaults use `TRADINGVIEW_CDP_HOST=host.docker.internal` and `TRADINGVIEW_CDP_PORT=9222`, which is the normal OrbStack path back to a service running on the Mac host.
+
 ## Troubleshooting
 
 | Problem | Solution |
 |---------|----------|
 | `cdp_connected: false` | Launch TradingView with `--remote-debugging-port=9222` |
 | `ECONNREFUSED` | TradingView isn't running or port 9222 is blocked |
+| Compose cannot reach TradingView | Make sure TradingView was launched on the Mac host and `TRADINGVIEW_CDP_HOST=host.docker.internal` |
 | MCP server not showing in Codex | Check `.mcp.json` syntax, restart or reload Codex/plugin configuration |
 | `tv` command not found | Run `npm link` from the project directory |
 | Tools return stale data | TradingView may still be loading — wait a few seconds |

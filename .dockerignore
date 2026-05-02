@@ -1,0 +1,9 @@
+node_modules
+npm-debug.log
+screenshots
+scripts/current.pine
+temp_*
+*.log
+discovery-log.json
+.git
+.DS_Store

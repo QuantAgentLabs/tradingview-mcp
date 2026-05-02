@@ -1,0 +1,23 @@
+services:
+  tradingview-mcp:
+    build:
+      context: .
+    image: tradingview-mcp:local
+    environment:
+      TRADINGVIEW_CDP_HOST: ${TRADINGVIEW_CDP_HOST:-host.docker.internal}
+      TRADINGVIEW_CDP_PORT: ${TRADINGVIEW_CDP_PORT:-9222}
+    stdin_open: true
+    tty: false
+    command: ["node", "src/server.js"]
+
+  tv:
+    image: tradingview-mcp:local
+    build:
+      context: .
+    environment:
+      TRADINGVIEW_CDP_HOST: ${TRADINGVIEW_CDP_HOST:-host.docker.internal}
+      TRADINGVIEW_CDP_PORT: ${TRADINGVIEW_CDP_PORT:-9222}
+    profiles:
+      - cli
+    entrypoint: ["node", "src/cli/index.js"]
+    command: ["--help"]

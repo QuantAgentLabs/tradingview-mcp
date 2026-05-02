@@ -142,6 +142,55 @@ Replace `/path/to/tradingview-mcp` with your actual path.
 
 Ask Codex: *"Use tv_health_check to verify TradingView is connected"*
 
+## Run with OrbStack / Docker Compose
+
+TradingView Desktop still runs on your Mac. The container runs the MCP server or CLI and connects back to TradingView through OrbStack's host bridge.
+
+### 1. Launch TradingView on macOS
+
+```bash
+./scripts/launch_tv_debug_mac.sh
+```
+
+Keep TradingView open with a chart loaded.
+
+### 2. Build the container
+
+```bash
+docker compose build
+```
+
+### 3. Use the CLI from Compose
+
+```bash
+docker compose run --rm tv status
+docker compose run --rm tv quote
+docker compose run --rm tv screenshot -r chart
+```
+
+The compose file defaults to:
+
+```bash
+TRADINGVIEW_CDP_HOST=host.docker.internal
+TRADINGVIEW_CDP_PORT=9222
+```
+
+Override them if needed:
+
+```bash
+TRADINGVIEW_CDP_HOST=host.docker.internal TRADINGVIEW_CDP_PORT=9223 docker compose run --rm tv status
+```
+
+### 4. Run the MCP server through Compose
+
+For an MCP client that can launch a command over stdio, use:
+
+```bash
+docker compose run --rm -T tradingview-mcp
+```
+
+`-T` disables TTY allocation so stdio MCP messages stay clean.
+
 ## CLI
 
 Every MCP tool is also accessible as a `tv` CLI command. All output is JSON for piping with `jq`.
