@@ -17,7 +17,7 @@ If the user specifies a different install path, use that instead of `~/tradingvi
 For Codex plugin installs, use the repo metadata:
 
 - `.codex-plugin/plugin.json` describes the plugin and points Codex at the bundled skills.
-- `.mcp.json` registers the OrbStack-backed `tradingview` MCP server through Docker Compose.
+- `.mcp.json` registers the persistent OrbStack-backed `tradingview` MCP server over HTTP.
 - `.mcp.local.json` registers the direct local Node server for development.
 - `skills/` contains the Codex skills that explain common TradingView workflows.
 
@@ -27,15 +27,12 @@ For a manual MCP client setup, merge this server entry into the client's MCP con
 {
   "mcpServers": {
     "tradingview": {
-      "command": "docker",
-      "args": ["compose", "run", "--rm", "--build", "-T", "tradingview-mcp"],
-      "cwd": "<INSTALL_PATH>"
+      "type": "http",
+      "url": "http://127.0.0.1:3000/mcp"
     }
   }
 }
 ```
-
-Replace `<INSTALL_PATH>` with the actual path where the repo was cloned (e.g., `/Users/username/tradingview-mcp`).
 
 If the config file already exists and has other servers, merge the `tradingview` entry into the existing `mcpServers` object. Do not overwrite other servers.
 
@@ -64,7 +61,31 @@ Linux:
 # or: tradingview --remote-debugging-port=9222
 ```
 
-## Step 4: Restart or Reload Codex
+## Step 4: Start the OrbStack MCP Service
+
+From the repo root:
+
+```bash
+npm run tvSetup
+```
+
+This will:
+
+1. Launch TradingView Desktop with CDP enabled on port `9222`
+2. Build the OrbStack image
+3. Start the persistent `tradingview-mcp` container
+4. Verify the HTTP MCP service can reach TradingView
+
+If you prefer the manual sequence:
+
+```bash
+npm run tvLaunch
+npm run tvBuild
+npm run tvUp
+npm run tvStatus
+```
+
+## Step 5: Restart or Reload Codex
 
 Most MCP clients load servers at startup or plugin reload time. After adding the config:
 
@@ -72,7 +93,7 @@ Most MCP clients load servers at startup or plugin reload time. After adding the
 2. Confirm the `tradingview` MCP server appears in the available tools
 3. The tradingview MCP server should connect automatically
 
-## Step 5: Verify Connection
+## Step 6: Verify Connection
 
 Use the `tv_health_check` tool. Expected response:
 
@@ -87,7 +108,7 @@ Use the `tv_health_check` tool. Expected response:
 
 If `cdp_connected: false`, TradingView is not running with `--remote-debugging-port=9222`.
 
-## Step 6: Install CLI (Optional)
+## Step 7: Install CLI (Optional)
 
 To use the `tv` CLI command globally:
 
@@ -98,33 +119,32 @@ npm link
 
 Then `tv status`, `tv quote`, `tv pine compile`, etc. work from anywhere.
 
-## Docker Compose / OrbStack (Optional)
+## Docker Compose / OrbStack
 
-TradingView Desktop must still run on the host machine with CDP enabled:
+TradingView Desktop must still run on the host machine with CDP enabled. The MCP server itself runs as a persistent container in OrbStack and listens on `http://127.0.0.1:3000/mcp`.
+
+Recommended one-command setup:
 
 ```bash
-./scripts/launch_tv_debug_mac.sh
+npm run tvSetup
 ```
 
-Build the container:
+Equivalent manual flow:
 
 ```bash
+npm run tvLaunch
 npm run tvBuild
-```
-
-Verify the container can reach TradingView:
-
-```bash
+npm run tvUp
 npm run tvStatus
 ```
 
-Codex launches the MCP server over stdio through Docker Compose using `.mcp.json`. For manual debugging only, run:
+Useful management commands:
 
 ```bash
-npm run tvMCP
+npm run tvUp
+npm run tvDown
+npm run tvStatus
 ```
-
-Use `npm run tvSetup` to launch TradingView on macOS and build the container in one command.
 
 The compose defaults use `TRADINGVIEW_CDP_HOST=0.250.250.254` and `TRADINGVIEW_CDP_PORT=9222`. `0.250.250.254` is OrbStack's host IP; it avoids TradingView Desktop's Electron CDP rejection of non-localhost hostnames such as `host.docker.internal`.
 
@@ -135,6 +155,7 @@ The compose defaults use `TRADINGVIEW_CDP_HOST=0.250.250.254` and `TRADINGVIEW_C
 | `cdp_connected: false` | Launch TradingView with `--remote-debugging-port=9222` |
 | `ECONNREFUSED` | TradingView isn't running or port 9222 is blocked |
 | Compose cannot reach TradingView | Make sure TradingView was launched on the Mac host and `TRADINGVIEW_CDP_HOST=0.250.250.254` |
+| `npm run tvStatus` fails with connection refused on port 3000 | Start the persistent service with `npm run tvUp` |
 | MCP server not showing in Codex | Check `.mcp.json` syntax, restart or reload Codex/plugin configuration |
 | `tv` command not found | Run `npm link` from the project directory |
 | Tools return stale data | TradingView may still be loading — wait a few seconds |

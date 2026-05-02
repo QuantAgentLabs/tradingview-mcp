@@ -1,16 +1,9 @@
 {
   "mcpServers": {
     "tradingview": {
-      "command": "docker",
-      "args": [
-        "compose",
-        "run",
-        "--rm",
-        "--build",
-        "-T",
-        "tradingview-mcp"
-      ],
-      "cwd": "."
+      "type": "http",
+      "url": "http://127.0.0.1:3000/mcp",
+      "note": "Persistent OrbStack MCP endpoint. Start it with `npm run tvSetup` or `npm run tvUp` after building the image."
     }
   }
 }

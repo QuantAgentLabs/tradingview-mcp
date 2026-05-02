@@ -22,7 +22,7 @@
   "interface": {
     "displayName": "TradingView MCP",
     "shortDescription": "Control TradingView Desktop from Codex",
-    "longDescription": "TradingView MCP gives Codex structured tools for reading and controlling a locally running TradingView Desktop chart. Use it for chart analysis, Pine Script development, replay practice, strategy reporting, screenshots, drawings, alerts, watchlists, layouts, and CLI automation. The default MCP server runs in OrbStack through Docker Compose and connects to TradingView Desktop through Chrome DevTools Protocol.",
+    "longDescription": "TradingView MCP gives Codex structured tools for reading and controlling a locally running TradingView Desktop chart. Use it for chart analysis, Pine Script development, replay practice, strategy reporting, screenshots, drawings, alerts, watchlists, layouts, and CLI automation. The default MCP server runs as a persistent OrbStack/Docker service and connects to TradingView Desktop through Chrome DevTools Protocol.",
     "developerName": "QuantAgentLabs",
     "category": "Finance",
     "capabilities": [
