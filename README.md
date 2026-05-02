@@ -76,9 +76,18 @@ Paste this into Codex and it will handle the rest:
 
 Or follow the manual steps below.
 
-## Quick Start
+## Quick Start: Codex + OrbStack
 
-### 1. Install
+This is the recommended local setup. TradingView Desktop runs as the Mac app, while the MCP server and CLI run inside OrbStack through Docker Compose.
+
+### 1. Prerequisites
+
+- TradingView Desktop installed and signed in
+- OrbStack running
+- Node.js 18+ for the npm helper scripts
+- Codex or another MCP client
+
+### 2. Install
 
 ```bash
 git clone https://github.com/QuantAgentLabs/tradingview-mcp.git
@@ -86,7 +95,79 @@ cd tradingview-mcp
 npm install
 ```
 
-### 2. Launch TradingView with CDP
+### 3. Launch TradingView and build the container
+
+```bash
+npm run tvSetup
+```
+
+This runs:
+
+```bash
+npm run tvLaunch
+npm run tvBuild
+```
+
+`tvLaunch` opens TradingView Desktop with Chrome DevTools Protocol enabled on port `9222`. Keep TradingView open with a chart loaded. It is safe to rerun `tvLaunch`: if CDP is already active, the script exits cleanly instead of opening a second broken instance. `tvBuild` builds the OrbStack/Docker image used by Codex.
+
+### 4. Verify the container can reach TradingView
+
+```bash
+npm run tvStatus
+```
+
+Expected result:
+
+```json
+{
+  "success": true,
+  "cdp_connected": true,
+  "api_available": true
+}
+```
+
+If this fails, confirm TradingView is still open and OrbStack is running.
+
+### 5. Connect Codex
+
+This repo includes Codex-ready metadata:
+
+- `.codex-plugin/plugin.json` — plugin description, skills path, and MCP config pointer
+- `.mcp.json` — OrbStack/Docker Compose stdio MCP server entry
+- `AGENTS.md` — Codex project instructions and tool-selection guidance
+- `skills/` — Codex skills for common TradingView workflows
+
+The default `.mcp.json` launches the MCP server inside OrbStack:
+
+```json
+{
+  "mcpServers": {
+    "tradingview": {
+      "command": "docker",
+      "args": ["compose", "run", "--rm", "--build", "-T", "tradingview-mcp"],
+      "cwd": "."
+    }
+  }
+}
+```
+
+In Codex, load/use this repo as the MCP/plugin project. Codex will start the containerized MCP server when it connects. You normally do not run `npm run tvMCP` manually; that command is only for debugging the MCP stdio process.
+
+### Useful Commands
+
+```bash
+npm run tvLaunch   # launch TradingView Desktop with CDP enabled
+npm run tvBuild    # build the OrbStack/Docker image
+npm run tvStatus   # check that the container can reach TradingView
+npm run tvMCP      # manual MCP server debug only; usually Codex runs this
+npm run tvSetup    # launch TradingView and build the image
+```
+
+If `tvLaunch` says `TradingView CDP is already running at http://localhost:9222`, that is a healthy result.
+
+## Manual / Non-OrbStack Setup
+
+### Launch TradingView with CDP
 
 TradingView Desktop must be running with Chrome DevTools Protocol enabled on port 9222.
 
@@ -113,7 +194,7 @@ scripts\launch_tv_debug.bat
 **Or use the MCP tool** (auto-detects your install):
 > "Use tv_launch to start TradingView in debug mode"
 
-### 3. Add to Codex MCP
+### Add to Codex MCP
 
 This repo includes Codex-ready metadata:
 
@@ -139,33 +220,13 @@ If you are adding the OrbStack-backed server manually to an MCP client, use:
 
 Replace `/path/to/tradingview-mcp` with your actual path.
 
-### 4. Verify
+### Verify
 
 Ask Codex: *"Use tv_health_check to verify TradingView is connected"*
 
-## Run with OrbStack / Docker Compose
+## OrbStack Details
 
 TradingView Desktop still runs on your Mac. The container runs the MCP server or CLI and connects back to TradingView through OrbStack's host bridge.
-
-### 1. Launch TradingView on macOS
-
-```bash
-./scripts/launch_tv_debug_mac.sh
-```
-
-Keep TradingView open with a chart loaded.
-
-### 2. Build the container
-
-```bash
-npm run tvBuild
-```
-
-### 3. Verify the container can reach TradingView
-
-```bash
-npm run tvStatus
-```
 
 The compose file defaults to:
 
@@ -182,7 +243,7 @@ Override them if needed:
 TRADINGVIEW_CDP_HOST=0.250.250.254 TRADINGVIEW_CDP_PORT=9223 docker compose run --rm tv status
 ```
 
-### 4. Use the MCP server from Codex
+### MCP Server from Codex
 
 The default `.mcp.json` now runs the MCP server in OrbStack through Docker Compose:
 

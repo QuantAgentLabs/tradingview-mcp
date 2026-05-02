@@ -16,7 +16,7 @@
     "tv": "node src/cli/index.js",
     "tvLaunch": "./scripts/launch_tv_debug_mac.sh",
     "tvBuild": "docker compose build",
-    "tvStatus": "docker compose run --rm tv status",
+    "tvStatus": "docker compose run --rm -T tv status",
     "tvMCP": "docker compose run --rm --build -T tradingview-mcp",
     "tvSetup": "npm run tvLaunch && npm run tvBuild",
     "test": "node --test tests/e2e.test.js tests/pine_analyze.test.js",
